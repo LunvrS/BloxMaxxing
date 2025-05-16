@@ -288,15 +288,15 @@ public class GameManager : MonoBehaviour
                 timer = initialTimerValue;
             }
             
-            // Remove the 4 most recently placed blocks (excluding the newest one)
-            // We keep the newest block (which just completed the combo) and remove the previous 4
+            // If we have at least 5 blocks (threshold value)
             if (placedBlocks.Count >= comboThreshold)
             {
-                // Keep track of blocks to remove
+                // Keep only the first block (base)
+                GameObject baseBlock = placedBlocks[0];
                 List<GameObject> blocksToRemove = new List<GameObject>();
                 
-                // Get the 4 blocks before the newest one
-                for (int i = placedBlocks.Count - comboThreshold; i < placedBlocks.Count - 1; i++)
+                // Add all blocks except the first one to the removal list
+                for (int i = 1; i < placedBlocks.Count; i++)
                 {
                     blocksToRemove.Add(placedBlocks[i]);
                 }
@@ -307,6 +307,23 @@ public class GameManager : MonoBehaviour
                     placedBlocks.Remove(block);
                     StartCoroutine(DestroyBlockWithEffect(block));
                 }
+                
+                // Reset so we're starting from the base block again
+                lastPlacedPosition = baseBlock.transform.position;
+                
+                // Create a new ghost block directly above the base for better guidance
+                if (currentGhostBlock != null)
+                {
+                    Vector3 ghostPosition = new Vector3(
+                        baseBlock.transform.position.x,
+                        baseBlock.transform.position.y + blockPrefab.transform.localScale.y,
+                        baseBlock.transform.position.z
+                    );
+                    currentGhostBlock.transform.position = ghostPosition;
+                }
+                
+                // Show a special message for complete reset
+                StartCoroutine(ShowTemporaryMessage("SUPER COMBO! Start Fresh!"));
             }
             
             // Reset combo
@@ -339,16 +356,9 @@ public class GameManager : MonoBehaviour
             rb = block.AddComponent<Rigidbody>();
         }
         
-        // Make sure this block is not in our placed blocks list
-        if (placedBlocks.Contains(block))
-        {
-            placedBlocks.Remove(block);
-        }
-        
         // Enable physics
         rb.isKinematic = false;
         rb.useGravity = true;
-        rb.constraints = RigidbodyConstraints.None;
         
         // Wait for block to fall
         yield return new WaitForSeconds(2f);
@@ -357,40 +367,7 @@ public class GameManager : MonoBehaviour
         GameOver();
     }
     
-    private IEnumerator DestroyBlockWithEffect(GameObject block)
-    {
-        // Add visual effect before destroying
-        Renderer renderer = block.GetComponent<Renderer>();
-        Material originalMaterial = renderer.material;
-        Material flashMaterial = new Material(originalMaterial);
-        flashMaterial.color = Color.yellow;
-        
-        // Flash effect
-        for (int i = 0; i < 3; i++)
-        {
-            renderer.material = flashMaterial;
-            yield return new WaitForSeconds(0.05f);
-            renderer.material = originalMaterial;
-            yield return new WaitForSeconds(0.05f);
-        }
-        
-        // Scale down effect
-        Vector3 originalScale = block.transform.localScale;
-        float duration = 0.3f;
-        float elapsed = 0;
-        
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            block.transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, t);
-            yield return null;
-        }
-        
-        // Destroy the block
-        Destroy(block);
-    }
-    
+    // Method declarations are now in the right place
     private IEnumerator ComboEffect()
     {
         // Simple combo effect - flash the combo text
@@ -441,6 +418,40 @@ public class GameManager : MonoBehaviour
         
         // Destroy temporary text
         Destroy(tempTextObj);
+    }
+    
+    private IEnumerator DestroyBlockWithEffect(GameObject block)
+    {
+        // Add visual effect before destroying
+        Renderer renderer = block.GetComponent<Renderer>();
+        Material originalMaterial = renderer.material;
+        Material flashMaterial = new Material(originalMaterial);
+        flashMaterial.color = Color.yellow;
+        
+        // Flash effect
+        for (int i = 0; i < 3; i++)
+        {
+            renderer.material = flashMaterial;
+            yield return new WaitForSeconds(0.05f);
+            renderer.material = originalMaterial;
+            yield return new WaitForSeconds(0.05f);
+        }
+        
+        // Scale down effect
+        Vector3 originalScale = block.transform.localScale;
+        float duration = 0.3f;
+        float elapsed = 0;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            block.transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, t);
+            yield return null;
+        }
+        
+        // Destroy the block
+        Destroy(block);
     }
     
     private void UpdateScoreUI()
