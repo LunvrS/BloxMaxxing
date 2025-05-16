@@ -1,0 +1,2 @@
+C:\Users\Meawjijung\Documents\ProjUnity\BloxMaxxing\Library\PramData\AndroidApplicationController\Cache\com.unity.template.ar_mobile\gradle-project\unityLibrary\src\main\cpp\CMakeLists.txt
+C:\Users\Meawjijung\Documents\ProjUnity\BloxMaxxing\Library\PramData\AndroidApplicationController\Cache\com.unity.template.ar_mobile\gradle-project\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt
